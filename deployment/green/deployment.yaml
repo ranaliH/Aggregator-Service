@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aggregator-service-green
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aggregator-service
+      env: green
+  template:
+    metadata:
+      labels:
+        app: aggregator-service
+        env: green
+    spec:
+      containers:
+      - name: aggregator-service
+        image: ranaliw/aggregator-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6000
+        env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-db-credentials  
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-db-credentials 
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-db-credentials
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-db-credentials
+                  key: DB_NAME
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aggregator-service-green
+spec:
+  selector:
+    app: aggregator-service
+    env: green
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 6000
+  type: LoadBalancer
